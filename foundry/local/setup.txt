@@ -1,0 +1,318 @@
+Drivers
+-------
+# Nvidia studio driver 
+https://www.nvidia.com/en-us/drivers
+
+# GeForce etc 5080 win 11 while 616.92
+https://www.nvidia.com/en-us/drivers/details/278455/
+
+# Powershell install
+Winget install microsoft.powershell
+
+Set-ExecutionPolicy Unrestricted -Scope currentuser -Force
+
+# Prequisite
+Winget install Microsoft.vcredist.2015+.x64
+
+# Utilities
+winget install --id Git.Git -e --source winget
+
+md c:\directorcia
+cd c:\directorcia
+Git clone https://github.com/directorcia/Azure
+
+winget install Microsoft.VisualStudioCode
+
+code --install-extension ms-windows-ai-studio.windows-ai-studio
+
+code --install-extension ms-python.python
+
+code --install-extension ms-toolsai.jupyter
+
+code --install-extension GitHub.copilot
+
+code --install-extension GitHub.copilot-chat
+
+# Monitoring
+https://www.hwinfo.com/
+nvidia-smi -l 1
+https://www.techpowerup.com/gpuz/
+https://www.msi.com/Landing/afterburner/graphics-cards
+https://librehardwaremonitor.net/
+Os mantic appliance - https://github.com/Osmantic/ODS
+GitHub - ArcadeRenegade/SidebarDiagnostics: A simple sidebar for Windows desktop that displays hardware diagnostic information. · GitHub
+
+Foundry Local
+-------------
+winget install Microsoft.FoundryLocal
+
+Foundry --version
+
+Foundry model list
+
+Foundry server status # Get Port number
+# Navigate to URL
+
+Foundry run phi-4-mini
+
+foundry chat phi-4-mini
+
+foundry config set port 5272 	# set static port
+foundry server restart
+
+---- PS Start ----
+# foundry-test.ps1
+# verify foundry basic opertion
+Invoke-RestMethod `
+  -Uri "http://127.0.0.1:63572/v1/models"
+
+# foundry-prompt.ps1
+# send a prompt to foundry
+$body = @{
+    model = "Phi-4-mini-instruct-cuda-gpu"
+    messages = @(
+        @{
+            role = "user"
+            content = "Hello"
+        }
+    )
+} | ConvertTo-Json -Depth 10
+
+Invoke-RestMethod `
+  -Uri "http://127.0.0.1:63572/v1/chat/completions" `
+  -Method Post `
+  -ContentType "application/json" `
+  -Body $body
+
+----- PS End ----
+
+---- Load Start ----
+
+# Window 1 - PowerShell
+nvidia-smi -l 1
+
+or
+
+while ($true) {
+	Clear-Host
+	nvidia-smi --query-gpu=name,temperature.gpu,utilization.gpu,memory.used,memory.total,power.draw --format=csv
+Start-Sleep 1
+}
+
+# Window 2 - PowerShell
+foundry server status
+
+# Window 3 - PowerShell
+foundry model run qwen2.5-7b
+
+# Ask: Write a 500 word article about Microsoft Copilot.
+
+# Watch:
+#	VRAM usage jump
+#	GPU utilisation increase
+#	Power consumption rise
+
+# If you only see:
+# 	GPU Util 0%
+# and the response is slow, the model is likely running primarily on CPU.
+
+--- Load End ---
+
+# Install Open-webUI using Docker or local
+
+OpenWeb-UI
+----------
+Foundry server status
+http://localhost:<PORT>		# use foundry port number
+Foundry run phi-4-mini
+Invoke-WebRequest http://localhost:<PORT>/v1/models
+docker start open-webui
+docker ps
+docker version
+
+http://localhost:3000
+Inside Open WebUI:
+	Profile
+	Admin Settings
+	Connections
+	Enable:
+		Direct Connections
+
+	Settings
+	Connections
+	Manage Direct Connections
+	+
+	http://host.docker.internal:<PORT>/v1
+	Authentication - None
+	Refresh Open WebUI
+
+Remote access via network http://<PC IP>:3000
+
+Ensure foundry model loaded
+Use model in openwebui by selecting
+
+Web search
+Admin
+	Settings
+	Web Search
+	DDG				# Duck Duck Go search
+
+Admin
+	Models
+	Edit
+
+✅ Web Search
+✅ File Upload
+✅ File Context
+✅ Built-in Tools
+✅ Citations
+
+Built-in Tools:
+
+✅ Web Search
+✅ Files
+✅ Chat History
+✅ Notes
+✅ Knowledge base
+
+❌ Calendar
+❌ Automations
+❌ Task Management
+❌ Notifications
+❌ Sub-agents
+❌ Memory
+
+Prompt -  List all available tools.
+
+curl http://localhost:54047/v1/models
+- Look for 'tools'
+- Missing?
+		"tools": [...]
+		"function_calling": true
+		"tool_use": true
+		"capabilities": [...]
+
+foundry run qwen3-8b
+- Add Web search in Models
+
+docker run -d --name searxng -p 8081:8080 searxng/searxng
+
+Admin
+Web search
+	Search Engine: SearXNG
+	Query URL: http://host.docker.internal:8081/search?q=<query>
+
+
+Knowledge base
+Workspace
+Knowledge
+	Create # new knowledge base
++
+Upload files
+Edit models
+Models
+→ qwen3:14b
+→ Select Knowledge
+	- Add knowledge base for default
+
+
+
+Ollama
+------
+winget install Ollama.Ollama
+
+ollama --version
+
+ollama run qwen3.5:9b
+
+Confirm it's running at http://localhost:11434
+
+Inside Open WebUI:
+	Profile
+	Admin Settings
+	Connections
+	Enable:
+		Direct Connections
+
+	Settings
+	Connections
+	Manage Direct Connections
+	+
+	http://host.docker.internal:11434
+	Authentication - None
+Refresh Open WebUI
+
+
+Visual Studio Code
+winget install Git.Git
+Winget install Microsoft.VisualStudioCode
+Login in with Github
+Ollama extension
+Microsoft Foundry Toolkit
+	code --install-extension ms-windows-ai-studio.windows-ai-studio
+	code --install-extension GitHub.copilot
+code --install-extension GitHub.copilot-chat
+Restart
+Update ollama context window
+
+N8N
+---
+docker volume create n8n_data
+
+docker run -d --name n8n -p 5678:5678 -v n8n_data:/home/node/.n8n --restart unless-stopped n8nio/n8n
+
+http://localhost:5678
+
+Option 2: Add AI models
+Ollama
+In n8n:
+
+Credentials
+→ OpenAI Compatible
+Use:
+
+Base URL:
+http://host.docker.internal:11434/v1
+
+Model:
+qwen3:14b
+You may need:
+
+API Key:
+dummy
+depending on the node.
+
+Foundry Local
+Once you've pinned Foundry to a permanent port:
+
+http://host.docker.internal:5272/v1
+you can add it as another OpenAI-compatible provider.
+
+
+Copilot CLI
+winget install GitHub.Copilot
+winget install OpenJS.NodeJS.LTS
+npm install -g @microsoft/workiq
+/plugin marketplace add microsoft/work-iq
+/plugin install workiq@work-iq
+workiq auth login
+workiq auth consent
+Workiq accept-eula
+Workiq mcp
+workiq ask -q "What meetings do I have today?"
+
+
+
+Openclaw
+
+Hermes
+
+Workiq
+Sharepoint search connector
+
+Opencode
+
+	npm install -g opencode-ai
+	OpenCode | The open source AI coding agent
+
+
